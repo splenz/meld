@@ -59,7 +59,7 @@ class TestSelectivelyActiveCollection(unittest.TestCase):
     def test_num_active_should_be_set(self):
         rest = [restraints.SelectableRestraint()]
         coll = restraints.SelectivelyActiveCollection(rest, 1)
-        self.assertEqual(coll.num_active, 1)
+        self.assertEqual(coll.num_active(0.0), 1)
 
     def test_should_wrap_bare_restraint_in_group(self):
         rest = [restraints.SelectableRestraint()]
@@ -104,7 +104,7 @@ class TestRestraintGroup(unittest.TestCase):
     def test_num_active_should_be_set(self):
         rest = [restraints.SelectableRestraint()]
         grp = restraints.RestraintGroup(rest, 1)
-        self.assertEqual(grp.num_active, 1)
+        self.assertEqual(grp.num_active(0.0), 1)
 
 
 class TestRestraintManager(unittest.TestCase):
@@ -1106,3 +1106,42 @@ class TestAbsoluteCOMRestraint(unittest.TestCase):
                 dims='xyz',
                 force_const=1,
                 position=[0., 0., 0.])
+
+class TestLinearIntegerScaler(unittest.TestCase):
+    def test_should_raise_when_alpha_min_below_zero(self):
+        with self.assertRaises(RuntimeError):
+            restraints.LinearIntegerScaler(-1, 1, 0, 50)
+
+    def test_should_raise_when_alpha_min_above_one(self):
+        with self.assertRaises(RuntimeError):
+            restraints.LinearIntegerScaler(2, 1, 0, 50)
+
+    def test_should_raise_when_alpha_max_below_zero(self):
+        with self.assertRaises(RuntimeError):
+            restraints.LinearIntegerScaler(1, -1, 0, 50)
+
+    def test_should_raise_if_alpha_max_less_than_alpha_min(self):
+        with self.assertRaises(RuntimeError):
+            restraints.LinearIntegerScaler(0.7, 0.6, 0, 50)
+
+    def test_should_raise_if_alpha_is_below_zero(self):
+        scaler = restraints.LinearIntegerScaler(0.2, 0.8, 0, 50)
+        with self.assertRaises(RuntimeError):
+            scaler(-1)
+
+    def test_should_raise_if_alpha_is_above_one(self):
+        scaler = restraints.LinearIntegerScaler(0.2, 0.8, 0, 50)
+        with self.assertRaises(RuntimeError):
+            scaler(2)
+
+    def test_should_return_min_value_below_alpha_min(self):
+        scaler = restraints.LinearScaler(0.2, 0.8, 0, 50)
+        self.assertAlmostEqual(scaler(0.1), 0)
+
+    def test_should_return_max_value_above_alpha_max(self):
+        scaler = restraints.LinearScaler(0.2, 0.8, 0, 50)
+        self.assertAlmostEqual(scaler(0.9), 50)
+
+    def test_should_return_correct_value_in_middle(self):
+        scaler = restraints.LinearScaler(0.0, 1.0, 0, 50)
+        self.assertAlmostEqual(scaler(0.5), 25)

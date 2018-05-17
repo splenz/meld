@@ -993,8 +993,6 @@ class AlwaysActiveCollection(object):
 
 
 class SelectivelyActiveCollection(object):
-    '''
-    '''
     def __init__(self, restraint_list, num_active):
         self._groups = []
         if not restraint_list:
@@ -1004,12 +1002,16 @@ class SelectivelyActiveCollection(object):
         for rest in restraint_list:
             self._add_restraint(rest)
 
-        if num_active < 0:
-            raise RuntimeError('num_active must be >= 0.')
+
+        if isinstance(num_active, int):
+            num_active = ConstantIntegerScaler(num_active)
+
+        if num_active(0.0) < 0 or num_active(1.0) < 0:
+            raise RuntimeError('num_active must always be >= 0.')
         n_rest = len(self._groups)
-        if num_active > n_rest:
+        if num_active(0.0) > n_rest or num_active(1.0) > n_rest:
             raise RuntimeError(
-                'num active must be <= num_groups ({}).'.format(n_rest))
+                'num active must always be <= num_groups ({}).'.format(n_rest))
         self._num_active = num_active
 
     @property
@@ -1028,7 +1030,7 @@ class SelectivelyActiveCollection(object):
                 'Cannot add restraint of type {} to'
                 'SelectivelyActiveCollection'.format(str(type(restraint))))
         else:
-            group = RestraintGroup([restraint], 1)
+            group = RestraintGroup([restraint], ConstantIntegerScaler(1))
             self._groups.append(group)
 
 
@@ -1040,12 +1042,15 @@ class RestraintGroup(object):
         for rest in rest_list:
             self._add_restraint(rest)
 
-        if num_active < 0:
-            raise RuntimeError('num_active must be >= 0.')
+        if isinstance(num_active, int):
+            num_active = ConstantIntegerScaler(num_active)
+
+        if num_active(0.0) < 0 or num_active(1.0) < 0:
+            raise RuntimeError('num_active must always be >= 0.')
         n_rest = len(self._restraints)
-        if num_active > n_rest:
+        if num_active(0.0) > n_rest or num_active(1.0) > n_rest:
             raise RuntimeError(
-                'num_active must be <= n_rest ({}).'.format(n_rest))
+                'num_active must always be <= n_rest ({}).'.format(n_rest))
         self._num_active = num_active
 
     @property
@@ -1064,8 +1069,6 @@ class RestraintGroup(object):
 
 
 class RestraintManager(object):
-    '''
-    '''
     def __init__(self, system):
         self._system = system
         self._always_active = AlwaysActiveCollection()
@@ -1226,6 +1229,42 @@ class LinearScaler(RestraintScaler):
             (self._strength_at_alpha_max - self._strength_at_alpha_min) +
             self._strength_at_alpha_min)
         return scale
+
+
+class ConstantIntegerScaler(RestraintScaler):
+    '''
+    Returns a constant integer value.
+    '''
+
+    _scaler_key_ = 'constant_integer'
+
+    def __init__(self, value):
+        self.value = int(value)
+
+    def __call__(self, alpha):
+        return self.value
+
+
+class LinearIntegerScaler(RestraintScaler):
+    '''
+    This scaler linearly interpolates between `value_at_min` at `alpha_min`
+    and `value_at_max` at `alpha_max` and is rounded to the nearest integer.
+    '''
+
+    _scaler_key_ = 'linear_integer'
+
+    def __init__(self, alpha_min, alpha_max, value_at_min, value_at_max):
+        self._linear_scaler = LinearScaler(alpha_min, alpha_max)
+        self._value_at_min = value_at_min
+        self._value_at_max = value_at_max
+
+    def __call__(self, alpha):
+        scale = self._linear_scaler(alpha)
+        value = int(round(self._value_at_min + scale * (self._value_at_max - self._value_at_min)))
+        assert value >= self._value_at_min
+        assert value <= self._value_at_max
+        return value
+
 
 
 class PlateauLinearScaler(RestraintScaler):

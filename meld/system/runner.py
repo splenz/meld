@@ -3,9 +3,6 @@
 # All rights reserved
 #
 
-from meld.system.openmm_runner import OpenMMRunner
-
-
 class ReplicaRunner(object):
     def initialize(self):
         pass
@@ -45,8 +42,11 @@ class FakeSystemRunner(object):
 
 def get_runner(system, options, comm):
     if options.runner == 'openmm':
+        from meld.system.openmm_runner import OpenMMRunner
         return OpenMMRunner(system, options, comm)
+
     elif options.runner == 'fake_runner':
         return FakeSystemRunner(system, options, comm)
+
     else:
         raise RuntimeError('Unknown type of runner: {}'.format(options.runner))

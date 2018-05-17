@@ -540,6 +540,14 @@ public:
     int addGroup(std::vector<int> restraint_indices, int n_active);
 
     /**
+     * Modify a restraint group
+     *
+     * @param group_index  the index of the group to modify
+     * @param n_active  the number of active restraints in the group
+     */
+    void modifyGroup(int restraint_index, int n_active);
+
+    /**
      * Create a new collection of restraint groups.
      *
      * @param group_indices  the indices of the groups in the collection
@@ -547,6 +555,14 @@ public:
      * @return the index of the collection that was created
      */
     int addCollection(std::vector<int> group_indices, int n_active);
+
+    /**
+     * Modify a new collection of restraint groups.
+     *
+     * @param collection_index index of collection to modify
+     * @param n_active  the number of active groups in the collection
+     */
+    void modifyCollection(int collection_index, int n_active);
 
 protected:
     OpenMM::ForceImpl* createImpl() const;

@@ -873,7 +873,7 @@ void CudaCalcMeldForceKernel::initialize(const System& system, const MeldForce& 
     replacements["MAXGROUPSIZE"] = cu.intToString(largestGroup);
     replacements["MAXCOLLECTIONSIZE"] = cu.intToString(largestCollection);
 
-    // setup thr maximum number of groups calculated in a single block
+    // setup the maximum number of groups calculated in a single block
     // want to maximize occupancy, but need to ensure that we fit
     // into shared memory
     int sharedSizeGroup = largestGroup * (sizeof(float) + sizeof(int));

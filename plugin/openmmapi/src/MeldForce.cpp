@@ -421,6 +421,11 @@ int MeldForce::addGroup(std::vector<int> restraint_indices, int n_active) {
     return groups.size() - 1;
 }
 
+void MeldForce::modifyGroup(int group_index, int n_active) {
+    g = groups[group_index];
+    g.n_active = n_active;
+}
+
 
 int MeldForce::addCollection(std::vector<int> group_indices, int n_active) {
     if (n_active < 0) {
@@ -428,6 +433,11 @@ int MeldForce::addCollection(std::vector<int> group_indices, int n_active) {
     }
     collections.push_back(CollectionInfo(group_indices, n_active));
     return collections.size() - 1;
+}
+
+void MeldForce::modifyCollection(int collection_index, int n_active) {
+    c = collections[collection_index];
+    c.n_active = n_active;
 }
 
 

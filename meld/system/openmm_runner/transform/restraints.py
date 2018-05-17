@@ -389,9 +389,9 @@ class MeldRestraintTransformer(TransformerBase):
                     for rest in group.restraints:
                         rest_index = _add_meld_restraint(rest, meld_force, 0, 0)
                         restraint_indices.append(rest_index)
-                    group_index = meld_force.addGroup(restraint_indices, group.num_active)
+                    group_index = meld_force.addGroup(restraint_indices, group.num_active(0.0))
                     group_indices.append(group_index)
-                meld_force.addCollection(group_indices, coll.num_active)
+                meld_force.addCollection(group_indices, coll.num_active(0.0))
             system.addForce(meld_force)
             self.force = meld_force
         return system
@@ -404,15 +404,25 @@ class MeldRestraintTransformer(TransformerBase):
             dist_prof_index = 0
             tors_prof_index = 0
             gmm_index = 0
+            group_index = 0
+            coll_index = 0
+
             if self.always_on:
                 for rest in self.always_on:
+                    group_index += 1
                     (dist_index, hyper_index, tors_index,
                      dist_prof_index, tors_prof_index, gmm_index) = (
                         _update_meld_restraint(rest, self.force, alpha, timestep,
                                                 dist_index, hyper_index, tors_index,
                                                 dist_prof_index, tors_prof_index, gmm_index))
+                coll_index += 1
+
             for coll in self.selective_on:
+                self.force.modifyCollection(coll_index, coll.num_active(alpha))
+                coll_index += 1
                 for group in coll.groups:
+                    self.force.modifyGroup(group_index, group.num_active(alpha))
+                    group_index += 1
                     for rest in group.restraints:
                         (dist_index, hyper_index, tors_index,
                          dist_prof_index, tors_prof_index, gmm_index) = (
