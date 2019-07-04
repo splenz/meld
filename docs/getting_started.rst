@@ -12,12 +12,13 @@ The preferred way to install MELD is using `anaconda <https://www.anaconda.com/d
 	conda activate meld-{VER}
 	conda install meld-cuda{CUDA_VER}
 
-where ``VER`` is the current version of `MELD<https://github.com/maccallumlab/meld-pkg>`_, and ``CUDA_VER`` is the installed version of cuda which is currently one of ``'75'``, ``'80'``, ``'90'``, ``'92'``, or ``'100'``. This will install MELD and all of its dependencies into a dedicated conda environment. Instructions on installing MELD from scratch can be found at `github <https://github.com/maccallumlab/meld>`_. 
+where ``VER`` is the current version of `MELD <https://github.com/maccallumlab/meld-pkg>`_, and ``CUDA_VER`` is the installed version of cuda which is currently one of ``'75'``, ``'80'``, ``'90'``, ``'92'``, or ``'100'``. This will install MELD and all of its dependencies into a dedicated conda environment. Instructions on installing MELD from scratch can be found at `github <https://github.com/maccallumlab/meld>`_. 
 
 The ideology behind MELD
-========================
+=========================
 
-The main idea behind MELD is to incorporate uncertain, ambiguous, or noisy experimental data into a simulation as distance restraints using Bayesian logic which is rooted in Bayes theorm .. math::
+The main idea behind MELD is to incorporate uncertain, ambiguous, or noisy experimental data into a simulation as distance restraints using Bayesian logic which is rooted in Bayes theorm:
+::
 	p(x|D) = p(D|X)p(x) ~ p(D|x)p(x)
 
 where the likelihood of the data given a structure ``(p(D|x))`` and the prior ``p(x)``, which expresses our belief in the probability of a structure given no additional data, allow us to infer the posterior ``(P(x|D))``, which is the ensemble of likely structures given some data D. In our case, the prior is the Boltzmann distribution produced by the Amber forcefield. The likelihood is more complicated. 
