@@ -96,18 +96,28 @@ class MultiplexReplicaExchangeRunner:
                     logger.info("Running molecular dynamics.")
                     states[state_index] = system_runner.run(states[state_index])
 
-            energies = []
+            total_energies = []
+            meld_energies = []
+            rdc_energies = []
+            ff_energies = []
             for state_index in range(self._n_replicas):
                 system_runner.prepare_for_timestep(
                     self._alphas[state_index], self._step
                 )
                 # compute our energy for each state
-                my_energies = self._compute_energies(states, system_runner)
-                energies.append(my_energies)
-            energies = np.array(energies)
+                total_energy, meld_energy, rdc_energy, ff_energy = self._compute_energies(states, system_runner)
+                total_energies.append(total_energy)
+                meld_energies.append(meld_energy)
+                rdc_energies.append(rdc_energy)
+                ff_energies.append(ff_energy)
+            total_energies = np.array(total_energies)
+            meld_energies = np.array(meld_energies)
+            rdc_energies = np.array(rdc_energies)
+            ff_energies = np.array(ff_energies)
+            
 
             # ask the ladder how to permute things
-            permutation_vector = self.ladder.compute_exchanges(energies, self.adaptor)
+            permutation_vector = self.ladder.compute_exchanges(total_energies, self.adaptor)
             states = self._permute_states(permutation_vector, states, system_runner)
 
             # perform reseeding if it is time
@@ -118,7 +128,11 @@ class MultiplexReplicaExchangeRunner:
             store.append_traj(states[0], self.step)
             store.save_alphas(self._alphas, self.step)
             store.save_permutation_vector(permutation_vector, self.step)
-            store.save_energy_matrix(energies, self.step)
+            store.save_energy_matrix(total_energies, self.step)
+            store.save_total_energy(total_energies, self.stage)
+            store.save_meld_energy(meld_energies, self.stage)
+            store.save_rdc_energy(rdc_energies, self.stage)
+            store.save_ff_energy(ff_energies, self.stage)
             store.save_acceptance_probabilities(
                 self.adaptor.get_acceptance_probabilities(), self.step
             )
@@ -138,10 +152,16 @@ class MultiplexReplicaExchangeRunner:
 
     @staticmethod
     def _compute_energies(states, system_runner):
-        my_energies = []
+        total_energies = []
+        meld_energies = []
+        rdc_energies = []
+        ff_energies = []
         for state in states:
-            my_energies.append(system_runner.get_energy(state))
-        return my_energies
+            total_energies.append(system_runner.get_total_energy(state))
+            meld_energies.append(system_runner.get_meld_energy(state))
+            rdc_energies.append(system_runner.get_rdc_energy(state))
+            ff_energies.append(system_runner.get_ff_energy(state))
+        return total_energies, meld_energies, rdc_energies, ff_energies
 
     @staticmethod
     def _permute_states(permutation_matrix, states, system_runner):
@@ -149,6 +169,9 @@ class MultiplexReplicaExchangeRunner:
         old_velocities = [s.velocities for s in states]
         old_box_vectors = [s.box_vector for s in states]
         old_energy = [s.energy for s in states]
+        old_meld_energy = [s.meld_energy for s in states]
+        old_rdc_energy = [s.rdc_energy for s in states]
+        old_ff_energy = [s.ff_energy for s in states]
         temperatures = [system_runner.temperature_scaler(s.alpha) for s in states]
         for i, index in enumerate(permutation_matrix):
             states[i].positions = old_coords[index]
@@ -157,6 +180,9 @@ class MultiplexReplicaExchangeRunner:
                 math.sqrt(temperatures[i] / temperatures[index]) * old_velocities[index]
             )
             states[i].energy = old_energy[index]
+            states[i].meld_energy = old_meld_energy[index]
+            states[i].rdc_energy = old_rdc_energy[index]
+            states[i].ff_energy = old_ff_energy[index]
         return states
 
     def _setup_alphas(self):

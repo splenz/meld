@@ -324,12 +324,18 @@ class DataStore:
         velocities = np.array([s.velocities for s in states])
         alphas = np.array([s.alpha for s in states])
         energies = np.array([s.energy for s in states])
+        meld_energy = np.array([s.meld_energy for s in states])
+        rdc_energy = np.array([s.rdc_energy for s in states])
+        ff_energy = np.array([s.ff_energy for s in states])
         box_vectors = np.array([s.box_vector for s in states])
         self.save_positions(positions, stage)
         self.save_velocities(velocities, stage)
         self.save_box_vectors(box_vectors, stage)
         self.save_alphas(alphas, stage)
         self.save_energies(energies, stage)
+        self.save_meld_energy(meld_energy, stage)
+        self.save_rdc_energy(rdc_energy, stage)
+        self.save_ff_energy(ff_energy, stage)
 
     def load_states(self, stage):
         """
@@ -346,10 +352,14 @@ class DataStore:
         box_vectors = self.load_box_vectors(stage)
         alphas = self.load_alphas(stage)
         energies = self.load_energies(stage)
+        meld_energy = self.load_meld_energy(stage)
+        rdc_energy = self.load_rdc_energy(stage)
+        ff_energy = self.load_ff_energy(stage)
+
         states = []
         for i in range(self._n_replicas):
             s = state.SystemState(
-                positions[i], velocities[i], alphas[i], energies[i], box_vectors[i]
+                positions[i], velocities[i], alphas[i], energies[i], meld_energy[i], rdc_energy[i], ff_energy[i], box_vectors[i]
             )
             states.append(s)
         return states
@@ -397,7 +407,7 @@ class DataStore:
             axis=-1,
         )
 
-    def save_energies(self, energies, stage):
+    def save_total_energy(self, energies, stage):
         """
         Save energies to disk.
 
@@ -409,7 +419,7 @@ class DataStore:
         self._handle_save_stage(stage)
         self._cdf_data_set.variables["energies"][..., stage] = energies
 
-    def load_energies(self, stage):
+    def load_total_energy(self, stage):
         """
         Load energies from disk.
 
@@ -419,6 +429,75 @@ class DataStore:
         """
         self._handle_load_stage(stage)
         return self._cdf_data_set.variables["energies"][..., stage]
+
+    def save_meld_energy(self, energies, stage):
+        """
+        Save MELD energy to disk.
+
+        :param energies: n_replicas array
+        :param stage: int stage to save
+
+        """
+        self._can_save()
+        self._handle_save_stage(stage)
+        self._cdf_data_set.variables["meld_energy"][..., stage] = energies
+
+    def load_meld_energy(self, stage):
+        """
+        Load MELD energy from disk.
+
+        :param stage: int stage to load
+        :return: n_replicas array
+
+        """
+        self._handle_load_stage(stage)
+        return self._cdf_data_set.variables["meld_energy"][..., stage]
+
+    def save_rdc_energy(self, energies, stage):
+        """
+        Save RDC energy to disk.
+
+        :param energies: n_replicas array
+        :param stage: int stage to save
+
+        """
+        self._can_save()
+        self._handle_save_stage(stage)
+        self._cdf_data_set.variables["rdc_energy"][..., stage] = energies
+
+    def load_rdc_energy(self, stage):
+        """
+        Load RDC energy from disk.
+
+        :param stage: int stage to load
+        :return: n_replicas array
+
+        """
+        self._handle_load_stage(stage)
+        return self._cdf_data_set.variables["rdc_energy"][..., stage]
+
+    def save_ff_energy(self, energies, stage):
+        """
+        Save force field energy to disk.
+
+        :param energies: n_replicas array
+        :param stage: int stage to save
+
+        """
+        self._can_save()
+        self._handle_save_stage(stage)
+        self._cdf_data_set.variables["ff_energy"][..., stage] = energies
+
+    def load_ff_energy(self, stage):
+        """
+        Load force field energy from disk.
+
+        :param stage: int stage to load
+        :return: n_replicas array
+
+        """
+        self._handle_load_stage(stage)
+        return self._cdf_data_set.variables["ff_energy"][..., stage]
 
     def load_all_energies(self):
         """
@@ -667,6 +746,37 @@ class DataStore:
             shuffle=True,
             complevel=9,
         )
+
+        ds.createVariable(
+            "meld_energy",
+            float,
+            ["n_replicas", "timesteps"],
+            zlib=True,
+            fletcher32=True,
+            shuffle=True,
+            complevel=9,
+        )
+
+        ds.createVariable(
+            "rdc_energy",
+            float,
+            ["n_replicas", "timesteps"],
+            zlib=True,
+            fletcher32=True,
+            shuffle=True,
+            complevel=9,
+        )
+
+        ds.createVariable(
+            "ff_energy",
+            float,
+            ["n_replicas", "timesteps"],
+            zlib=True,
+            fletcher32=True,
+            shuffle=True,
+            complevel=9,
+        )
+
         ds.createVariable(
             "permutation_vectors",
             int,

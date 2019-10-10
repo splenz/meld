@@ -291,14 +291,54 @@ class MPICommunicator:
             return self._mpi_comm.bcast(None, root=0)
 
     @log_timing(logger)
-    def gather_energies_from_slaves(
+    def gather_total_energies_from_slaves(
         self, energies_on_master: List[float]
     ) -> np.ndarray:
         """
-        gather_energies_from_slaves(energies_on_master)
+        gather_total_energies_from_slaves(energies_on_master)
         Receive a list of energies from each slave.
 
         :param energies_on_master: a list of energies from the master
+        :returns: a square matrix of every state on every replica to be used
+                  for replica exchange
+
+        """
+        with timeout(
+            self._timeout,
+            RuntimeError(self._timeout_message.format("gather_total_energies_from_slaves")),
+        ):
+            energies = self._mpi_comm.gather(energies_on_master, root=0)
+            return np.array(energies)
+
+    @log_timing(logger)
+    def gather_meld_energies_from_slaves(
+        self, energies_on_master: List[float]
+    ) -> np.ndarray:
+        """
+        gather_meld_energies_from_slaves(energies_on_master)
+        Receive a list of MELD energies from each slave.
+
+        :param energies_on_master: a list of MELD energies from the master
+        :returns: a square matrix of every state on every replica to be used
+                  for replica exchange
+
+        """
+        with timeout(
+            self._timeout,
+            RuntimeError(self._timeout_message.format("gather_meld_energies_from_slaves")),
+        ):
+            energies = self._mpi_comm.gather(energies_on_master, root=0)
+            return np.array(energies)
+
+    @log_timing(logger)
+    def gather_rdc_energies_from_slaves(
+        self, energies_on_master: List[float]
+    ) -> np.ndarray:
+        """
+        gather_rdc_energies_from_slaves(energies_on_master)
+        Receive a list of RDC energies from each slave.
+
+        :param energies_on_master: a list of RDC energies from the master
         :returns: a square matrix of every state on every replica to be used
                   for replica exchange
 
@@ -311,7 +351,27 @@ class MPICommunicator:
             return np.array(energies)
 
     @log_timing(logger)
-    def send_energies_to_master(self, energies: List[float]) -> None:
+    def gather_ff_energies_from_slaves(
+        self, energies_on_master: List[float]
+    ) -> np.ndarray:
+        """
+        gather_ff_energies_from_slaves(energies_on_master)
+        Receive a list of FF energies from each slave.
+
+        :param energies_on_master: a list of FF energies from the master
+        :returns: a square matrix of every state on every replica to be used
+                  for replica exchange
+
+        """
+        with timeout(
+            self._timeout,
+            RuntimeError(self._timeout_message.format("gather_ff_energies_from_slaves")),
+        ):
+            energies = self._mpi_comm.gather(energies_on_master, root=0)
+            return np.array(energies)
+
+    @log_timing(logger)
+    def send_total_energies_to_master(self, total_energies: List[float]) -> None:
         """
         send_energies_to_master(energies)
         Send a list of energies to the master.
@@ -322,9 +382,57 @@ class MPICommunicator:
         """
         with timeout(
             self._timeout,
-            RuntimeError(self._timeout_message.format("send_energies_to_master")),
+            RuntimeError(self._timeout_message.format("send_total_energies_to_master")),
         ):
-            return self._mpi_comm.gather(energies, root=0)
+            return self._mpi_comm.gather(total_energies, root=0)
+
+    @log_timing(logger)
+    def send_meld_energies_to_master(self, meld_energies: List[float]) -> None:
+        """
+        send_meld_energies_to_master(energies)
+        Send a list of MELD energies to the master.
+
+        :param energies: a list of MELD energies to send to the master
+        :returns: :const:`None`
+
+        """
+        with timeout(
+            self._timeout,
+            RuntimeError(self._timeout_message.format("send_meld_energies_to_master")),
+        ):
+            return self._mpi_comm.gather(meld_energies, root=0)
+
+    @log_timing(logger)
+    def send_rdc_energies_to_master(self, rdc_energies: List[float]) -> None:
+        """
+        send_rdc_energies_to_master(energies)
+        Send a list of RDC energies to the master.
+
+        :param energies: a list of RDC energies to send to the master
+        :returns: :const:`None`
+
+        """
+        with timeout(
+            self._timeout,
+            RuntimeError(self._timeout_message.format("send_rdc_energies_to_master")),
+        ):
+            return self._mpi_comm.gather(rdc_energies, root=0)
+
+    @log_timing(logger)
+    def send_ff_energies_to_master(self, ff_energies: List[float]) -> None:
+        """
+        send_ff_energies_to_master(energies)
+        Send a list of Force Field energies to the master.
+
+        :param energies: a list of Force Field energies to send to the master
+        :returns: :const:`None`
+
+        """
+        with timeout(
+            self._timeout,
+            RuntimeError(self._timeout_message.format("send_ff_energies_to_master")),
+        ):
+            return self._mpi_comm.gather(ff_energies, root=0)
 
     @log_timing(logger)
     def negotiate_device_id(self) -> int:

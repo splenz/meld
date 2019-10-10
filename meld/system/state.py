@@ -14,6 +14,9 @@ class SystemState:
     :param velocities: velocities for structure, same as coords
     :param alpha: alpha value, within ``[0, 1]``
     :param energy: total potential energy, including restraints
+    :param meld_energy: MELD energy
+    :param rdc_energy: RDC restraint energy
+    :param ff_energy: Force Field energy
 
     """
 
@@ -31,6 +34,10 @@ class SystemState:
         self.n_atoms = positions.shape[0]
         self.alpha = alpha
         self.energy = energy
+        self.meld_energy = meld_energy
+        self.rdc_energy = rdc_energy
+        self.ff_energy = ff_energy
+
 
         self._validate()
 

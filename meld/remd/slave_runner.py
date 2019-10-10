@@ -69,10 +69,23 @@ class SlaveReplicaExchangeRunner:
             # compute energies
             states = communicator.exchange_states_for_energy_calc(state)
 
-            energies = []
+            total_energies = []
+            meld_energies = []
+            rdc_energies = []
+            ff_energies = []
             for state in states:
-                energy = system_runner.get_energy(state)
-                energies.append(energy)
-            communicator.send_energies_to_master(energies)
+                total_energy = system_runner.get_total_energy(state)
+                total_energies.append(energy)
+                meld_energy = system_runner.get_meld_energy(state)
+                meld_energies.append(meld_energy)
+                rdc_energy = system_runner.get_rdc_energy(state)
+                rdc_energies.append(rdc_energy)
+                ff_energy = system_runner.get_ff_energy(state)
+                ff_energies.append(ff_energy)
+                    
+            communicator.send_total_energies_to_master(total_energies)
+            communicator.send_meld_energies_to_master(meld_energies)
+            communicator.send_rdc_energies_to_master(rdc_energies)
+            communicator.send_ff_energies_to_master(ff_energies)
 
             self._step += 1

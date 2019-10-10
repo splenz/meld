@@ -22,7 +22,16 @@ class ReplicaRunner:
     def run(self, state: SystemState) -> SystemState:
         pass
 
-    def get_energy(self, state: SystemState) -> float:
+    def get_total_energy(self, state: SystemState) -> float:
+        pass
+
+    def get_meld_energy(self, state: SystemState) -> float:
+        pass
+
+    def get_rdc_energy(self, state: SystemState) -> float:
+        pass
+
+    def get_ff_energy(self, state: SystemState) -> float:
         pass
 
     def prepare_for_timestep(self, alpha, timestep):
@@ -51,8 +60,17 @@ class FakeSystemRunner(ReplicaRunner):
     def run(self, state: SystemState) -> SystemState:
         return state
 
-    def get_energy(self, state: SystemState) -> float:
-        return 0.
+    def get_total_energy(self, state: SystemState) -> float:
+        return 0
+
+    def get_meld_energy(self, state: SystemState) -> float:
+        return 0
+
+    def get_rdc_energy(self, state: SystemState) -> float:
+        return 0
+
+    def get_ff_energy(self, state: SystemState) -> float:
+        return 0
 
     def prepare_for_timestep(self, alpha: float, timestep: int) -> None:
         pass
