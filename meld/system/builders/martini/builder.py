@@ -25,7 +25,14 @@ import openmm as mm  # type: ignore
 from openmm import unit as u  # type: ignore
 import numpy as np  # type: ignore
 
-import martini_openmm as martini
+try:
+    import martini_openmm as martini  # type: ignore
+except ImportError:
+    print()
+    print("You are trying to use the martini builder functionality.")
+    print("This requires the installation of the optional martini_openmm")
+    print("dependency, but this could not be imported.")
+    raise
 
 # Need to expand options for all use cases
 @partial(dataclass, frozen=True)
@@ -89,6 +96,7 @@ class MartiniSystemBuilder:
         # get any defines
         defines = {}
         try:
+            assert self.options.defines_file is not None
             with open(self.options.defines_file) as def_file:
                 for line in def_file:
                     line = line.strip()
@@ -123,7 +131,7 @@ class MartiniSystemBuilder:
 
         coords = conf.getPositions(asNumpy=True).value_in_unit(u.nanometer)
         try:
-            vels = conf.getPositions(asNumpy=True)
+            vels = conf.getVelocities(asNumpy=True) # Gromacs files do not contain velocity information; may be better to set this using Maxwell-Boltzmann 
         except AttributeError:
             print("WARNING: No velocities found, setting to zero")
             vels = np.zeros_like(coords)
